@@ -27,6 +27,12 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  void _refreshList() {
+    setState(() {
+      _displayedPersons = _personRepository.getAllPersons();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -39,6 +45,11 @@ class _HomePageState extends State<HomePage> {
             icon: const Icon(Icons.analytics),
             onPressed: () => context.go('/github-stats'),
             tooltip: 'GitHub Statistics',
+          ),
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _refreshList,
+            tooltip: 'Оновити список',
           ),
         ],
       ),
@@ -74,11 +85,19 @@ class _HomePageState extends State<HomePage> {
                       return _PersonListItem(
                         person: person,
                         onTap: () => context.go('/details/${person.id}'),
+                        onEdit: () => context.go('/add-edit', extra: {'person': person, 'isDuplicate': false}),
+                        onDuplicate: () => context.go('/add-edit', extra: {'person': person, 'isDuplicate': true}),
                       );
                     },
                   ),
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => context.go('/add-edit'),
+        backgroundColor: const Color.fromARGB(255, 55, 255, 188),
+        foregroundColor: Colors.white,
+        child: const Icon(Icons.add),
       ),
     );
   }
@@ -87,10 +106,14 @@ class _HomePageState extends State<HomePage> {
 class _PersonListItem extends StatelessWidget {
   final Person person;
   final VoidCallback onTap;
+  final VoidCallback onEdit;
+  final VoidCallback onDuplicate;
 
   const _PersonListItem({
     required this.person,
     required this.onTap,
+    required this.onEdit,
+    required this.onDuplicate,
   });
 
   @override
@@ -124,6 +147,7 @@ class _PersonListItem extends StatelessWidget {
                           skill,
                           style: const TextStyle(fontSize: 10),
                         ),
+                        backgroundColor: const Color.fromARGB(255, 55, 255, 188).withOpacity(0.2),
                         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         visualDensity: VisualDensity.compact,
                       ))
@@ -131,7 +155,22 @@ class _PersonListItem extends StatelessWidget {
             ),
           ],
         ),
-        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.edit, size: 20),
+              onPressed: onEdit,
+              tooltip: 'Редагувати',
+            ),
+            IconButton(
+              icon: const Icon(Icons.copy, size: 20),
+              onPressed: onDuplicate,
+              tooltip: 'Дублювати',
+            ),
+            const Icon(Icons.arrow_forward_ios, size: 16),
+          ],
+        ),
         onTap: onTap,
       ),
     );

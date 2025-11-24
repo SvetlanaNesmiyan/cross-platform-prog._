@@ -1,7 +1,11 @@
 import '../models/person.dart';
 
 class PersonRepository {
-  final List<Person> _persons = [
+  static final PersonRepository _instance = PersonRepository._internal();
+  factory PersonRepository() => _instance;
+  PersonRepository._internal();
+
+  List<Person> _persons = [
     Person(
       id: 1,
       name: 'Світлана',
@@ -61,5 +65,25 @@ class PersonRepository {
       person.position.toLowerCase().contains(lowercaseQuery) ||
       person.skills.any((skill) => skill.toLowerCase().contains(lowercaseQuery))
     ).toList();
+  }
+
+  int getNextId() {
+    if (_persons.isEmpty) return 1;
+    return _persons.map((person) => person.id).reduce((a, b) => a > b ? a : b) + 1;
+  }
+
+  void addPerson(Person person) {
+    _persons.add(person);
+  }
+
+  void updatePerson(Person updatedPerson) {
+    final index = _persons.indexWhere((person) => person.id == updatedPerson.id);
+    if (index != -1) {
+      _persons[index] = updatedPerson;
+    }
+  }
+
+  void deletePerson(int id) {
+    _persons.removeWhere((person) => person.id == id);
   }
 }
