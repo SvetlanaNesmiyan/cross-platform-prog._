@@ -33,6 +33,8 @@ class _AddEditPersonPageState extends State<AddEditPersonPage> {
   late TextEditingController _experienceController;
   late TextEditingController _avatarUrlController;
 
+  bool _isSaving = false;
+
   @override
   void initState() {
     super.initState();
@@ -65,35 +67,93 @@ class _AddEditPersonPageState extends State<AddEditPersonPage> {
     super.dispose();
   }
 
-  void _savePerson() {
+  Future<void> _savePerson() async {
     if (_formKey.currentState!.validate()) {
-      final skillsList = _skillsController.text.split(',').map((skill) => skill.trim()).where((skill) => skill.isNotEmpty).toList();
+      setState(() {
+        _isSaving = true;
+      });
 
-      final person = Person(
-        id: widget.isDuplicate ? _personRepository.getNextId() : (widget.person?.id ?? _personRepository.getNextId()),
-        name: _nameController.text,
-        surname: _surnameController.text,
-        age: int.tryParse(_ageController.text) ?? 0,
-        email: _emailController.text,
-        phone: _phoneController.text,
-        position: _positionController.text,
-        skills: skillsList,
-        about: _aboutController.text,
-        education: _educationController.text,
-        experience: _experienceController.text,
-        avatarUrl: _avatarUrlController.text,
-      );
+      try {
+        final skillsList = _skillsController.text.split(',').map((skill) => skill.trim()).where((skill) => skill.isNotEmpty).toList();
 
-      if (widget.person == null || widget.isDuplicate) {
-        _personRepository.addPerson(person);
-      } else {
-        _personRepository.updatePerson(person);
-      }
+        final person = Person(
+          id: widget.isDuplicate ? _personRepository.getNextId() : (widget.person?.id ?? _personRepository.getNextId()),
+          name: _nameController.text,
+          surname: _surnameController.text,
+          age: int.tryParse(_ageController.text) ?? 0,
+          email: _emailController.text,
+          phone: _phoneController.text,
+          position: _positionController.text,
+          skills: skillsList,
+          about: _aboutController.text,
+          education: _educationController.text,
+          experience: _experienceController.text,
+          avatarUrl: _avatarUrlController.text.isEmpty ? 'assets/avatar.jpg' : _avatarUrlController.text,
+        );
 
-      if (mounted) {
-        context.go('/');
+        if (widget.person == null || widget.isDuplicate) {
+          await _personRepository.addPerson(person);
+        } else {
+          await _personRepository.updatePerson(person);
+        }
+
+        if (mounted) {
+          context.go('/');
+        }
+      } catch (e) {
+        setState(() {
+          _isSaving = false;
+        });
+        _showErrorDialog('Помилка збереження: $e');
       }
     }
+  }
+
+  Future<void> _deletePerson() async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Видалити резюме'),
+        content: const Text('Ви впевнені, що хочете видалити це резюме?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Скасувати'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Видалити'),
+          ),
+        ],
+      ),
+    );
+
+    if (result == true && mounted) {
+      try {
+        await _personRepository.deletePerson(widget.person!.id);
+        if (mounted) {
+          context.go('/');
+        }
+      } catch (e) {
+        _showErrorDialog('Помилка видалення: $e');
+      }
+    }
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Помилка'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -109,208 +169,225 @@ class _AddEditPersonPageState extends State<AddEditPersonPage> {
           if (widget.person != null && !widget.isDuplicate)
             IconButton(
               icon: const Icon(Icons.delete),
-              onPressed: () {
-                _personRepository.deletePerson(widget.person!.id);
-                context.go('/');
-              },
+              onPressed: _deletePerson,
             ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            children: [
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Ім\'я *',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Будь ласка, введіть ім\'я';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _surnameController,
-                decoration: const InputDecoration(
-                  labelText: 'Прізвище *',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Будь ласка, введіть прізвище';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _ageController,
-                decoration: const InputDecoration(
-                  labelText: 'Вік *',
-                  border: OutlineInputBorder(),
-                ),
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Будь ласка, введіть вік';
-                  }
-                  if (int.tryParse(value) == null) {
-                    return 'Будь ласка, введіть коректний вік';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _emailController,
-                decoration: const InputDecoration(
-                  labelText: 'Email *',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Будь ласка, введіть email';
-                  }
-                  if (!value.contains('@')) {
-                    return 'Будь ласка, введіть коректний email';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _phoneController,
-                decoration: const InputDecoration(
-                  labelText: 'Телефон *',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Будь ласка, введіть телефон';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _positionController,
-                decoration: const InputDecoration(
-                  labelText: 'Позиція *',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Будь ласка, введіть позицію';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _skillsController,
-                decoration: const InputDecoration(
-                  labelText: 'Навички (через кому) *',
-                  border: OutlineInputBorder(),
-                  hintText: 'Наприклад: Flutter, Dart, Git',
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Будь ласка, введіть навички';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _aboutController,
-                decoration: const InputDecoration(
-                  labelText: 'Про мене *',
-                  border: OutlineInputBorder(),
-                  alignLabelWithHint: true,
-                ),
-                maxLines: 3,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Будь ласка, введіть інформацію про себе';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _educationController,
-                decoration: const InputDecoration(
-                  labelText: 'Освіта *',
-                  border: OutlineInputBorder(),
-                  alignLabelWithHint: true,
-                ),
-                maxLines: 2,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Будь ласка, введіть освіту';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _experienceController,
-                decoration: const InputDecoration(
-                  labelText: 'Досвід роботи *',
-                  border: OutlineInputBorder(),
-                  alignLabelWithHint: true,
-                ),
-                maxLines: 3,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Будь ласка, введіть досвід роботи';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _avatarUrlController,
-                decoration: const InputDecoration(
-                  labelText: 'URL аватара',
-                  border: OutlineInputBorder(),
-                  hintText: 'assets/avatar.jpg',
-                ),
-              ),
-              const SizedBox(height: 24),
-              Row(
+      body: _isSaving
+          ? const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: _savePerson,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color.fromARGB(255, 55, 255, 188),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
-                      child: Text(widget.person == null ? 'Додати' : 'Зберегти'),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => context.go('/'),
-                      child: const Text('Скасувати'),
-                    ),
-                  ),
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text('Збереження...'),
                 ],
               ),
-            ],
-          ),
-        ),
-      ),
+            )
+          : Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Form(
+                key: _formKey,
+                child: ListView(
+                  children: [
+                    TextFormField(
+                      controller: _nameController,
+                      decoration: const InputDecoration(
+                        labelText: 'Ім\'я *',
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Будь ласка, введіть ім\'я';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _surnameController,
+                      decoration: const InputDecoration(
+                        labelText: 'Прізвище *',
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Будь ласка, введіть прізвище';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _ageController,
+                      decoration: const InputDecoration(
+                        labelText: 'Вік *',
+                        border: OutlineInputBorder(),
+                      ),
+                      keyboardType: TextInputType.number,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Будь ласка, введіть вік';
+                        }
+                        if (int.tryParse(value) == null) {
+                          return 'Будь ласка, введіть коректний вік';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _emailController,
+                      decoration: const InputDecoration(
+                        labelText: 'Email *',
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Будь ласка, введіть email';
+                        }
+                        if (!value.contains('@')) {
+                          return 'Будь ласка, введіть коректний email';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _phoneController,
+                      decoration: const InputDecoration(
+                        labelText: 'Телефон *',
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Будь ласка, введіть телефон';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _positionController,
+                      decoration: const InputDecoration(
+                        labelText: 'Позиція *',
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Будь ласка, введіть позицію';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _skillsController,
+                      decoration: const InputDecoration(
+                        labelText: 'Навички (через кому) *',
+                        border: OutlineInputBorder(),
+                        hintText: 'Наприклад: Flutter, Dart, Git',
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Будь ласка, введіть навички';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _aboutController,
+                      decoration: const InputDecoration(
+                        labelText: 'Про мене *',
+                        border: OutlineInputBorder(),
+                        alignLabelWithHint: true,
+                      ),
+                      maxLines: 3,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Будь ласка, введіть інформацію про себе';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _educationController,
+                      decoration: const InputDecoration(
+                        labelText: 'Освіта *',
+                        border: OutlineInputBorder(),
+                        alignLabelWithHint: true,
+                      ),
+                      maxLines: 2,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Будь ласка, введіть освіту';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _experienceController,
+                      decoration: const InputDecoration(
+                        labelText: 'Досвід роботи *',
+                        border: OutlineInputBorder(),
+                        alignLabelWithHint: true,
+                      ),
+                      maxLines: 3,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Будь ласка, введіть досвід роботи';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _avatarUrlController,
+                      decoration: const InputDecoration(
+                        labelText: 'URL аватара',
+                        border: OutlineInputBorder(),
+                        hintText: 'assets/avatar.jpg',
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: _isSaving ? null : _savePerson,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color.fromARGB(255, 55, 255, 188),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                            ),
+                            child: _isSaving
+                                ? const SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                    ),
+                                  )
+                                : Text(widget.person == null ? 'Додати' : 'Зберегти'),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: _isSaving ? null : () => context.go('/'),
+                            child: const Text('Скасувати'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
     );
   }
 }

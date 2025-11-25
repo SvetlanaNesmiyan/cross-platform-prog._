@@ -14,11 +14,32 @@ class _HomePageState extends State<HomePage> {
   final PersonRepository _personRepository = PersonRepository();
   final TextEditingController _searchController = TextEditingController();
   List<Person> _displayedPersons = [];
+  bool _isLoading = true;
+  String? _error;
 
   @override
   void initState() {
     super.initState();
-    _displayedPersons = _personRepository.getAllPersons();
+    _initializeData();
+  }
+
+  Future<void> _initializeData() async { // ← Добавьте Future<void>
+    try {
+      await _personRepository.initialize();
+      if (mounted) {
+        setState(() {
+          _displayedPersons = _personRepository.getAllPersons();
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = 'Помилка завантаження даних: $e';
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   void _searchPersons(String query) {
@@ -27,10 +48,11 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  void _refreshList() {
+  Future<void> _refreshList() async {
     setState(() {
-      _displayedPersons = _personRepository.getAllPersons();
+      _isLoading = true;
     });
+    await _initializeData(); // ← Теперь это корректно
   }
 
   @override
@@ -53,46 +75,76 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: TextField(
-              controller: _searchController,
-              onChanged: _searchPersons,
-              decoration: InputDecoration(
-                hintText: 'Пошук за іменем, посадою або навичками...',
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+      body: _isLoading
+          ? const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text('Завантаження даних...'),
+                ],
               ),
-            ),
-          ),
-          
-          Expanded(
-            child: _displayedPersons.isEmpty
-                ? const Center(
-                    child: Text(
-                      'Нічого не знайдено',
-                      style: TextStyle(fontSize: 18),
-                    ),
-                  )
-                : ListView.builder(
-                    itemCount: _displayedPersons.length,
-                    itemBuilder: (context, index) {
-                      final person = _displayedPersons[index];
-                      return _PersonListItem(
-                        person: person,
-                        onTap: () => context.go('/details/${person.id}'),
-                        onEdit: () => context.go('/add-edit', extra: {'person': person, 'isDuplicate': false}),
-                        onDuplicate: () => context.go('/add-edit', extra: {'person': person, 'isDuplicate': true}),
-                      );
-                    },
+            )
+          : _error != null
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.error, size: 64, color: Colors.red),
+                      const SizedBox(height: 16),
+                      Text(
+                        _error!,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(fontSize: 16, color: Colors.red),
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: _refreshList,
+                        child: const Text('Спробувати знову'),
+                      ),
+                    ],
                   ),
-          ),
-        ],
-      ),
+                )
+              : Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: TextField(
+                        controller: _searchController,
+                        onChanged: _searchPersons,
+                        decoration: InputDecoration(
+                          hintText: 'Пошук за іменем, посадою або навичками...',
+                          prefixIcon: const Icon(Icons.search),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: _displayedPersons.isEmpty
+                          ? const Center(
+                              child: Text(
+                                'Нічого не знайдено',
+                                style: TextStyle(fontSize: 18),
+                              ),
+                            )
+                          : ListView.builder(
+                              itemCount: _displayedPersons.length,
+                              itemBuilder: (context, index) {
+                                final person = _displayedPersons[index];
+                                return _PersonListItem(
+                                  person: person,
+                                  onTap: () => context.go('/details/${person.id}'),
+                                  onEdit: () => context.go('/add-edit', extra: {'person': person, 'isDuplicate': false}),
+                                  onDuplicate: () => context.go('/add-edit', extra: {'person': person, 'isDuplicate': true}),
+                                );
+                              },
+                            ),
+                    ),
+                  ],
+                ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => context.go('/add-edit'),
         backgroundColor: const Color.fromARGB(255, 55, 255, 188),
