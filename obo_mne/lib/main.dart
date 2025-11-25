@@ -5,7 +5,7 @@ import 'router.dart';
 import 'services/github_service.dart';
 import 'repositories/github_repository.dart';
 import 'view_models/github_stats_view_model.dart';
-import 'theme_provider.dart';
+import '/theme/theme_provider.dart';
 
 void main() {
   runApp(const MyApp());

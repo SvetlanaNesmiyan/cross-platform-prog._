@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../view_models/github_stats_view_model.dart';
-import '../theme_provider.dart';
+import '/theme/theme_provider.dart';
 
 class GitHubStatsPage extends StatefulWidget {
   const GitHubStatsPage({super.key});

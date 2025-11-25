@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../repositories/person_repository.dart';
 import '../models/person.dart';
 import '../widgets/info_card.dart';
-import '../theme_provider.dart';
+import '/theme/theme_provider.dart';
 
 class DetailsPage extends StatelessWidget {
   final int personId;

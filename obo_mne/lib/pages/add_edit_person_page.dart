@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../models/person.dart';
 import '../repositories/person_repository.dart';
-import '../theme_provider.dart';
+import '/theme/theme_provider.dart';
 
 class AddEditPersonPage extends StatefulWidget {
   final Person? person;
