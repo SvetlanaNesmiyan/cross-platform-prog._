@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../repositories/person_repository.dart';
 import '../models/person.dart';
+import '../theme_provider.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -23,7 +25,7 @@ class _HomePageState extends State<HomePage> {
     _initializeData();
   }
 
-  Future<void> _initializeData() async { // ← Добавьте Future<void>
+  Future<void> _initializeData() async {
     try {
       await _personRepository.initialize();
       if (mounted) {
@@ -52,17 +54,24 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       _isLoading = true;
     });
-    await _initializeData(); // ← Теперь это корректно
+    await _initializeData();
   }
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    
     return Scaffold(
       appBar: AppBar(
         title: const Text('Список осіб'),
         backgroundColor: const Color.fromARGB(255, 55, 255, 188),
         foregroundColor: const Color.fromARGB(255, 255, 238, 238),
         actions: [
+          IconButton(
+            icon: Icon(themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode),
+            onPressed: () => themeProvider.toggleTheme(),
+            tooltip: 'Перемкнути тему',
+          ),
           IconButton(
             icon: const Icon(Icons.analytics),
             onPressed: () => context.go('/github-stats'),

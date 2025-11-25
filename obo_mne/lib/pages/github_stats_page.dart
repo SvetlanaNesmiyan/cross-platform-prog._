@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../view_models/github_stats_view_model.dart';
+import '../theme_provider.dart';
 
 class GitHubStatsPage extends StatefulWidget {
   const GitHubStatsPage({super.key});
@@ -32,6 +33,8 @@ class _GitHubStatsPageState extends State<GitHubStatsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    
     return Scaffold(
       appBar: AppBar(
         title: const Text('GitHub Statistics'),
@@ -41,6 +44,13 @@ class _GitHubStatsPageState extends State<GitHubStatsPage> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go('/'),
         ),
+        actions: [
+          IconButton(
+            icon: Icon(themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode),
+            onPressed: () => themeProvider.toggleTheme(),
+            tooltip: 'Toggle theme',
+          ),
+        ],
       ),
       body: Consumer<GitHubStatsViewModel>(
         builder: (context, viewModel, child) {

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../models/person.dart';
 import '../repositories/person_repository.dart';
+import '../theme_provider.dart';
 
 class AddEditPersonPage extends StatefulWidget {
   final Person? person;
@@ -158,6 +160,8 @@ class _AddEditPersonPageState extends State<AddEditPersonPage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.person == null 
@@ -166,6 +170,11 @@ class _AddEditPersonPageState extends State<AddEditPersonPage> {
         backgroundColor: const Color.fromARGB(255, 55, 255, 188),
         foregroundColor: const Color.fromARGB(255, 255, 238, 238),
         actions: [
+          IconButton(
+            icon: Icon(themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode),
+            onPressed: () => themeProvider.toggleTheme(),
+            tooltip: 'Toggle theme',
+          ),
           if (widget.person != null && !widget.isDuplicate)
             IconButton(
               icon: const Icon(Icons.delete),
