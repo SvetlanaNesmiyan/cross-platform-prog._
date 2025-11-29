@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+
 import '../repositories/person_repository.dart';
 import '../models/person.dart';
 import '/theme/theme_provider.dart';
@@ -67,6 +69,13 @@ class _HomePageState extends State<HomePage> {
         backgroundColor: const Color.fromARGB(255, 55, 255, 188),
         foregroundColor: const Color.fromARGB(255, 255, 238, 238),
         actions: [
+          if (kIsWeb) ...[
+            IconButton(
+              icon: const Icon(Icons.home),
+              onPressed: () => context.go('/'),
+              tooltip: 'Головна',
+            ),
+          ],
           IconButton(
             icon: Icon(themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode),
             onPressed: () => themeProvider.toggleTheme(),
@@ -128,6 +137,8 @@ class _HomePageState extends State<HomePage> {
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
+                          filled: true,
+                          fillColor: Theme.of(context).cardColor,
                         ),
                       ),
                     ),

@@ -32,4 +32,34 @@ final GoRouter router = GoRouter(
       },
     ),
   ],
+  errorBuilder: (context, state) => Scaffold(
+    body: Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.error_outline, size: 64, color: Colors.red),
+          const SizedBox(height: 16),
+          const Text(
+            'Сторінку не знайдено',
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Помилка 404: ${state.uri}',
+            style: const TextStyle(fontSize: 16, color: Colors.grey),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton(
+            onPressed: () => context.go('/'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color.fromARGB(255, 55, 255, 188),
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('На головну'),
+          ),
+        ],
+      ),
+    ),
+  ),
 );

@@ -12,26 +12,27 @@ class GitHubService {
       final response = await client.get(
         Uri.parse('https://api.github.com/users/$username'),
         headers: {
-          'User-Agent': 'Flutter App',
+          'User-Agent': 'Flutter Resume Builder App',
           'Accept': 'application/vnd.github.v3+json',
         },
-      ).timeout(const Duration(seconds: 10));
+      ).timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
-        print('GitHub API Response: $jsonData');
         return GitHubProfile.fromJson(jsonData);
       } else if (response.statusCode == 404) {
-        throw Exception('GitHub user not found: $username');
+        throw Exception('GitHub користувача не знайдено: $username');
+      } else if (response.statusCode == 403) {
+        throw Exception('Перевищено ліміт запитів до GitHub API. Спробуйте пізніше.');
       } else {
-        throw Exception('Failed to load GitHub profile: ${response.statusCode}');
+        throw Exception('Помилка завантаження профілю GitHub: ${response.statusCode}');
       }
     } on http.ClientException catch (e) {
-      throw Exception('Network error: ${e.message}');
+      throw Exception('Мережева помилка: ${e.message}');
     } on FormatException catch (e) {
-      throw Exception('Data format error: ${e.message}');
+      throw Exception('Помилка формату даних: ${e.message}');
     } catch (e) {
-      throw Exception('Unexpected error: $e');
+      throw Exception('Неочікувана помилка: $e');
     }
   }
 }
