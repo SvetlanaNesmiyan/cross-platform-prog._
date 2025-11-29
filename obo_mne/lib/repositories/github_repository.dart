@@ -12,7 +12,6 @@ class GitHubRepository {
 
   Future<Map<String, dynamic>> getGitHubStats(String username) async {
     try {
-      // Спочатку пробуємо реальний API
       final profile = await _gitHubService.getGitHubProfile(username);
       
       return {
@@ -25,7 +24,6 @@ class GitHubRepository {
         },
       };
     } catch (e) {
-      // Якщо реальний API не працює, пропонуємо користувачу використати демо-дані
       rethrow;
     }
   }

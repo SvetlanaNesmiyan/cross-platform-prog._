@@ -20,7 +20,6 @@ void main() {
     });
 
     test('returns GitHubProfile when the http call completes successfully', () async {
-      // Arrange
       final responseJson = '''
       {
         "login": "testuser",
@@ -43,10 +42,8 @@ void main() {
         headers: anyNamed('headers'),
       )).thenAnswer((_) async => http.Response(responseJson, 200));
 
-      // Act
       final profile = await githubService.getGitHubProfile('testuser');
 
-      // Assert
       expect(profile, isA<GitHubProfile>());
       expect(profile.login, equals('testuser'));
       expect(profile.name, equals('Test User'));
@@ -56,43 +53,36 @@ void main() {
     });
 
     test('throws an exception when the http call completes with 404', () async {
-      // Arrange
       when(mockClient.get(
         Uri.parse('https://api.github.com/users/testuser'),
         headers: anyNamed('headers'),
       )).thenAnswer((_) async => http.Response('Not Found', 404));
 
-      // Act & Assert
       expect(() async => await githubService.getGitHubProfile('testuser'),
           throwsException);
     });
 
     test('throws an exception when the http call completes with non-200 status', () async {
-      // Arrange
       when(mockClient.get(
         Uri.parse('https://api.github.com/users/testuser'),
         headers: anyNamed('headers'),
       )).thenAnswer((_) async => http.Response('Server Error', 500));
 
-      // Act & Assert
       expect(() async => await githubService.getGitHubProfile('testuser'),
           throwsException);
     });
 
     test('throws an exception when there is a network error', () async {
-      // Arrange
       when(mockClient.get(
         Uri.parse('https://api.github.com/users/testuser'),
         headers: anyNamed('headers'),
       )).thenThrow(http.ClientException('Network error'));
 
-      // Act & Assert
       expect(() async => await githubService.getGitHubProfile('testuser'),
           throwsException);
     });
 
     test('throws an exception when there is a timeout', () async {
-      // Arrange
       when(mockClient.get(
         Uri.parse('https://api.github.com/users/testuser'),
         headers: anyNamed('headers'),
@@ -101,7 +91,6 @@ void main() {
         return http.Response('{}', 200);
       });
 
-      // Act & Assert
       expect(() async => await githubService.getGitHubProfile('testuser'),
           throwsException);
     });

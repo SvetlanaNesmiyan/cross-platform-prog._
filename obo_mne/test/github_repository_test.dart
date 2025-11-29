@@ -20,7 +20,6 @@ void main() {
     });
 
     test('returns GitHub stats when getGitHubStats is called', () async {
-      // Arrange
       final profile = GitHubProfile(
         login: 'testuser',
         avatarUrl: 'https://example.com/avatar.png',
@@ -39,10 +38,8 @@ void main() {
       when(mockGitHubService.getGitHubProfile('testuser'))
           .thenAnswer((_) async => profile);
 
-      // Act
       final result = await githubRepository.getGitHubStats('testuser');
 
-      // Assert
       expect(result['profile'], equals(profile));
       expect(result['stats']['repositories'], equals(10));
       expect(result['stats']['followers'], equals(5));
@@ -52,20 +49,16 @@ void main() {
     });
 
     test('throws exception when getGitHubStats encounters an error', () async {
-      // Arrange
       when(mockGitHubService.getGitHubProfile('testuser'))
           .thenThrow(Exception('User not found'));
 
-      // Act & Assert
       expect(() async => await githubRepository.getGitHubStats('testuser'),
           throwsException);
     });
 
     test('returns mock GitHub stats when getGitHubStatsMock is called', () async {
-      // Act
       final result = await githubRepository.getGitHubStatsMock('testuser');
 
-      // Assert
       expect(result['profile'], isA<GitHubProfile>());
       expect(result['profile'].login, equals('testuser'));
       expect(result['profile'].name, equals('Svitlana Nesmiian'));
@@ -76,11 +69,9 @@ void main() {
     });
 
     test('calculates account age correctly for mock data', () async {
-      // Act
       final result = await githubRepository.getGitHubStatsMock('testuser');
       final accountAge = result['stats']['accountAge'] as int;
 
-      // Assert
       expect(accountAge, greaterThan(0));
       expect(accountAge, isA<int>());
     });
@@ -96,7 +87,6 @@ void main() {
     });
 
     test('handles invalid date format gracefully', () async {
-      // Arrange
       final profile = GitHubProfile(
         login: 'testuser',
         avatarUrl: 'https://example.com/avatar.png',
@@ -115,10 +105,8 @@ void main() {
       when(mockGitHubService.getGitHubProfile('testuser'))
           .thenAnswer((_) async => profile);
 
-      // Act
       final result = await githubRepository.getGitHubStats('testuser');
 
-      // Assert
       expect(result['stats']['accountAge'], equals(0));
     });
   });

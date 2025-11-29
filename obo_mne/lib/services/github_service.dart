@@ -1,4 +1,3 @@
-// lib/services/github_service.dart
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/github_profile.dart';
@@ -20,7 +19,7 @@ class GitHubService {
 
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
-        print('GitHub API Response: $jsonData'); // Додайте це для дебагу
+        print('GitHub API Response: $jsonData');
         return GitHubProfile.fromJson(jsonData);
       } else if (response.statusCode == 404) {
         throw Exception('GitHub user not found: $username');

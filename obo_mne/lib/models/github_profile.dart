@@ -4,7 +4,7 @@ part 'github_profile.freezed.dart';
 part 'github_profile.g.dart';
 
 @freezed
-class GitHubProfile with _$GitHubProfile {
+abstract class GitHubProfile with _$GitHubProfile {
   const factory GitHubProfile({
     required String login,
     @JsonKey(name: 'avatar_url') required String avatarUrl,
