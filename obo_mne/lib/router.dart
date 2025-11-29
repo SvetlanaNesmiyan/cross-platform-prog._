@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:obo_mne/pages/home_page.dart';
 import 'package:obo_mne/pages/details_page.dart';
