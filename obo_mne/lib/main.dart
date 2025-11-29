@@ -10,7 +10,6 @@ import 'view_models/github_stats_view_model.dart';
 import 'theme/theme_provider.dart';
 
 void main() {
-  // Використовуємо path стратегію для URL (краще для веб)
   setPathUrlStrategy();
   
   runApp(const MyApp());
