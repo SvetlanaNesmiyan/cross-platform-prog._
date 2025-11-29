@@ -27,7 +27,7 @@ class DetailsPage extends StatelessWidget {
       appBar: AppBar(
         title: Text(_person.fullName),
         backgroundColor: Color.fromARGB(255, 55, 255, 188),
-        foregroundColor: Color.fromARGB(255, 255, 238, 238),
+        foregroundColor: const Color.fromARGB(255, 2, 60, 16),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go('/'),

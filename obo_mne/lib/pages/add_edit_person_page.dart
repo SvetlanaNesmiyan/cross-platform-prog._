@@ -168,7 +168,7 @@ class _AddEditPersonPageState extends State<AddEditPersonPage> {
           ? 'Додати резюме' 
           : (widget.isDuplicate ? 'Дублювати резюме' : 'Редагувати резюме')),
         backgroundColor: const Color.fromARGB(255, 55, 255, 188),
-        foregroundColor: const Color.fromARGB(255, 255, 238, 238),
+        foregroundColor: const Color.fromARGB(255, 2, 60, 16),
         actions: [
           IconButton(
             icon: Icon(themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode),
@@ -369,7 +369,7 @@ class _AddEditPersonPageState extends State<AddEditPersonPage> {
                             onPressed: _isSaving ? null : _savePerson,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color.fromARGB(255, 55, 255, 188),
-                              foregroundColor: Colors.white,
+                              foregroundColor: const Color.fromARGB(255, 2, 60, 16),
                               padding: const EdgeInsets.symmetric(vertical: 16),
                             ),
                             child: _isSaving

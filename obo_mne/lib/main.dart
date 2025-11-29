@@ -8,10 +8,10 @@ import 'services/github_service.dart';
 import 'repositories/github_repository.dart';
 import 'view_models/github_stats_view_model.dart';
 import 'theme/theme_provider.dart';
+import 'services/ad_service.dart';
 
 void main() {
   setPathUrlStrategy();
-  
   runApp(const MyApp());
 }
 
@@ -30,6 +30,7 @@ class MyApp extends StatelessWidget {
             Provider.of<GitHubRepository>(context, listen: false),
           ),
         ),
+        Provider(create: (context) => AdService()),
       ],
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, child) {

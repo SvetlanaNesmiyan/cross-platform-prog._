@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+
 import '../view_models/github_stats_view_model.dart';
 import '/theme/theme_provider.dart';
+import '../services/ad_service.dart';
 
 class GitHubStatsPage extends StatefulWidget {
   const GitHubStatsPage({super.key});
@@ -13,7 +15,7 @@ class GitHubStatsPage extends StatefulWidget {
 
 class _GitHubStatsPageState extends State<GitHubStatsPage> {
   final TextEditingController _usernameController = TextEditingController();
-  final String defaultUsername = 'happymary16';
+  final String defaultUsername = 'SvetlanaNesmiyan';
 
   @override
   void initState() {
@@ -23,6 +25,9 @@ class _GitHubStatsPageState extends State<GitHubStatsPage> {
 
   void _loadStats() {
     final viewModel = Provider.of<GitHubStatsViewModel>(context, listen: false);
+    final adService = Provider.of<AdService>(context, listen: false);
+    
+    adService.showInterstitialAd();
     viewModel.loadGitHubStats(_usernameController.text.trim());
   }
 
@@ -34,12 +39,13 @@ class _GitHubStatsPageState extends State<GitHubStatsPage> {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
+    final adService = Provider.of<AdService>(context);
     
     return Scaffold(
       appBar: AppBar(
         title: const Text('GitHub Statistics'),
         backgroundColor: const Color.fromARGB(255, 55, 255, 188),
-        foregroundColor: const Color.fromARGB(255, 255, 238, 238),
+        foregroundColor: const Color.fromARGB(255, 2, 60, 16),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go('/'),
@@ -52,42 +58,52 @@ class _GitHubStatsPageState extends State<GitHubStatsPage> {
           ),
         ],
       ),
-      body: Consumer<GitHubStatsViewModel>(
-        builder: (context, viewModel, child) {
-          return Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              children: [
-                _buildSearchField(viewModel),
-                const SizedBox(height: 20),
-                
-                if (viewModel.isLoading) ...[
-                  const Center(child: CircularProgressIndicator()),
-                  const SizedBox(height: 20),
-                  const Text('Loading GitHub data...'),
-                ] else if (viewModel.error != null) ...[
-                  _buildErrorWidget(viewModel.error!, viewModel),
-                ] else if (viewModel.profile != null) ...[
-                  _buildProfileCard(viewModel),
-                  const SizedBox(height: 20),
-                  _buildStatsGrid(viewModel),
-                  const SizedBox(height: 10),
-                  Text(
-                    viewModel.usingMockData 
-                      ? '⚠️ Displaying demo data' 
-                      : '✅ Real GitHub data',
-                    style: TextStyle(
-                      color: viewModel.usingMockData ? Colors.orange : Colors.green,
-                      fontWeight: FontWeight.bold,
-                    ),
+      body: Column(
+        children: [
+          Expanded(
+            child: Consumer<GitHubStatsViewModel>(
+              builder: (context, viewModel, child) {
+                return Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    children: [
+                      _buildSearchField(viewModel),
+                      const SizedBox(height: 20),
+                      
+                      if (viewModel.isLoading) ...[
+                        const Center(child: CircularProgressIndicator()),
+                        const SizedBox(height: 20),
+                        const Text('Loading GitHub data...'),
+                      ] else if (viewModel.error != null) ...[
+                        _buildErrorWidget(viewModel.error!, viewModel),
+                      ] else if (viewModel.profile != null) ...[
+                        _buildProfileCard(viewModel),
+                        const SizedBox(height: 20),
+                        _buildStatsGrid(viewModel),
+                        const SizedBox(height: 10),
+                        Text(
+                          viewModel.usingMockData 
+                            ? '⚠️ Displaying demo data' 
+                            : '✅ Real GitHub data',
+                          style: TextStyle(
+                            color: viewModel.usingMockData ? Colors.orange : Colors.green,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ] else ...[
+                        _buildInitialState(),
+                      ],
+                    ],
                   ),
-                ] else ...[
-                  _buildInitialState(),
-                ],
-              ],
+                );
+              },
             ),
-          );
-        },
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: adService.createBannerAd(),
+          ),
+        ],
       ),
     );
   }
@@ -116,7 +132,7 @@ class _GitHubStatsPageState extends State<GitHubStatsPage> {
                   onPressed: _loadStats,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color.fromARGB(255, 55, 255, 188),
-                    foregroundColor: Colors.white,
+                    foregroundColor: const Color.fromARGB(255, 2, 60, 16)
                   ),
                   child: const Text('Load Real Data'),
                 ),

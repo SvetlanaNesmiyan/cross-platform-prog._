@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import '../repositories/person_repository.dart';
 import '../models/person.dart';
 import '/theme/theme_provider.dart';
+import '../services/ad_service.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -25,6 +26,18 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _initializeData();
+    _initializeAds();
+  }
+
+  void _initializeAds() async {
+    final adService = Provider.of<AdService>(context, listen: false);
+    await adService.initialize();
+    adService.loadInterstitialAd();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 
   Future<void> _initializeData() async {
@@ -59,15 +72,22 @@ class _HomePageState extends State<HomePage> {
     await _initializeData();
   }
 
+  void _onAddPerson() {
+    final adService = Provider.of<AdService>(context, listen: false);
+    adService.showInterstitialAd();
+    context.go('/add-edit');
+  }
+
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
+    final adService = Provider.of<AdService>(context);
     
     return Scaffold(
       appBar: AppBar(
         title: const Text('Список осіб'),
         backgroundColor: const Color.fromARGB(255, 55, 255, 188),
-        foregroundColor: const Color.fromARGB(255, 255, 238, 238),
+        foregroundColor: const Color.fromARGB(255, 2, 60, 16),
         actions: [
           if (kIsWeb) ...[
             IconButton(
@@ -93,82 +113,92 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      body: _isLoading
-          ? const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 16),
-                  Text('Завантаження даних...'),
-                ],
-              ),
-            )
-          : _error != null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.error, size: 64, color: Colors.red),
-                      const SizedBox(height: 16),
-                      Text(
-                        _error!,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(fontSize: 16, color: Colors.red),
-                      ),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: _refreshList,
-                        child: const Text('Спробувати знову'),
-                      ),
-                    ],
-                  ),
-                )
-              : Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: TextField(
-                        controller: _searchController,
-                        onChanged: _searchPersons,
-                        decoration: InputDecoration(
-                          hintText: 'Пошук за іменем, посадою або навичками...',
-                          prefixIcon: const Icon(Icons.search),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          filled: true,
-                          fillColor: Theme.of(context).cardColor,
-                        ),
-                      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: _isLoading
+                ? const Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircularProgressIndicator(),
+                        SizedBox(height: 16),
+                        Text('Завантаження даних...'),
+                      ],
                     ),
-                    Expanded(
-                      child: _displayedPersons.isEmpty
-                          ? const Center(
-                              child: Text(
-                                'Нічого не знайдено',
-                                style: TextStyle(fontSize: 18),
-                              ),
-                            )
-                          : ListView.builder(
-                              itemCount: _displayedPersons.length,
-                              itemBuilder: (context, index) {
-                                final person = _displayedPersons[index];
-                                return _PersonListItem(
-                                  person: person,
-                                  onTap: () => context.go('/details/${person.id}'),
-                                  onEdit: () => context.go('/add-edit', extra: {'person': person, 'isDuplicate': false}),
-                                  onDuplicate: () => context.go('/add-edit', extra: {'person': person, 'isDuplicate': true}),
-                                );
-                              },
+                  )
+                : _error != null
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.error, size: 64, color: Colors.red),
+                            const SizedBox(height: 16),
+                            Text(
+                              _error!,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(fontSize: 16, color: Colors.red),
                             ),
-                    ),
-                  ],
-                ),
+                            const SizedBox(height: 16),
+                            ElevatedButton(
+                              onPressed: _refreshList,
+                              child: const Text('Спробувати знову'),
+                            ),
+                          ],
+                        ),
+                      )
+                    : Column(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: TextField(
+                              controller: _searchController,
+                              onChanged: _searchPersons,
+                              decoration: InputDecoration(
+                                hintText: 'Пошук за іменем, посадою або навичками...',
+                                prefixIcon: const Icon(Icons.search),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                filled: true,
+                                fillColor: Theme.of(context).cardColor,
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: _displayedPersons.isEmpty
+                                ? const Center(
+                                    child: Text(
+                                      'Нічого не знайдено',
+                                      style: TextStyle(fontSize: 18),
+                                    ),
+                                  )
+                                : ListView.builder(
+                                    itemCount: _displayedPersons.length,
+                                    itemBuilder: (context, index) {
+                                      final person = _displayedPersons[index];
+                                      return _PersonListItem(
+                                        person: person,
+                                        onTap: () => context.go('/details/${person.id}'),
+                                        onEdit: () => context.go('/add-edit', extra: {'person': person, 'isDuplicate': false}),
+                                        onDuplicate: () => context.go('/add-edit', extra: {'person': person, 'isDuplicate': true}),
+                                      );
+                                    },
+                                  ),
+                          ),
+                        ],
+                      ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: adService.createBannerAd(),
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => context.go('/add-edit'),
+        onPressed: _onAddPerson,
         backgroundColor: const Color.fromARGB(255, 55, 255, 188),
-        foregroundColor: Colors.white,
+        foregroundColor: const Color.fromARGB(255, 2, 60, 16),
         child: const Icon(Icons.add),
       ),
     );
